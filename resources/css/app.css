@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-steward-primary: #1e3a8a;
+  --color-steward-accent: #3b82f6;
+  --color-steward-danger: #dc2626;
+  --color-steward-success: #16a34a;
+  --color-steward-warning: #ea580c;
+  --color-steward-dark: #1f2937;
+  --color-steward-muted: #6b7280;
+
+  --font-family-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Custom utilities */
+.breach-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}

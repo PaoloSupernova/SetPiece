@@ -1,0 +1,37 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/build/
+.vite/
+
+# Environment
+.env
+
+# Storage
+/storage/logs/*.log
+/storage/inbox/*.eml
+/storage/inbox/processed/*
+/storage/inbox/failed/*
+/storage/attachments/*
+/storage/ocr/*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.phar
+composer.lock
+
+# NPM
+package-lock.json
+yarn.lock
