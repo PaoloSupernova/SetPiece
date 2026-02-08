@@ -20,13 +20,22 @@ class Database
      */
     private function __construct()
     {
-        $host = $_ENV['DB_HOST'] ?? 'localhost';
-        $port = $_ENV['DB_PORT'] ?? '3306';
-        $dbname = $_ENV['DB_DATABASE'] ?? 'steward';
-        $username = $_ENV['DB_USERNAME'] ?? 'steward';
-        $password = $_ENV['DB_PASSWORD'] ?? 'steward';
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
 
-        $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+        if ($driver === 'sqlite') {
+            $dbPath = $_ENV['DB_PATH'] ?? 'database/steward.db';
+            $fullPath = __DIR__ . '/../../' . $dbPath;
+            $dsn = "sqlite:{$fullPath}";
+            $username = null;
+            $password = null;
+        } else {
+            $host = $_ENV['DB_HOST'] ?? 'localhost';
+            $port = $_ENV['DB_PORT'] ?? '3306';
+            $dbname = $_ENV['DB_DATABASE'] ?? 'steward';
+            $username = $_ENV['DB_USERNAME'] ?? 'steward';
+            $password = $_ENV['DB_PASSWORD'] ?? 'steward';
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+        }
 
         $options = [
             \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,

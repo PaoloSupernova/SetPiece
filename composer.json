@@ -3,10 +3,10 @@
   "description": "Complaint Management Portal for UK Football Clubs",
   "type": "project",
   "require": {
-    "php": "^8.4",
+    "php": "^8.3",
     "vlucas/phpdotenv": "^5.6",
-    "php-mime-mail-parser/php-mime-mail-parser": "^8.0",
-    "thiagoalessio/tesseract_ocr": "^2.14",
+    "zbateson/mail-mime-parser": "^2.4",
+    "thiagoalessio/tesseract_ocr": "^2.13",
     "dompdf/dompdf": "^3.0"
   },
   "autoload": {

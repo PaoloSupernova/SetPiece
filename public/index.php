@@ -17,6 +17,10 @@ ini_set('error_log', __DIR__ . '/../storage/logs/php_errors.log');
 
 // Custom error and exception handlers
 set_error_handler(function ($severity, $message, $file, $line) {
+    // Don't throw exception for suppressed errors (with @)
+    if (!(error_reporting() & $severity)) {
+        return;
+    }
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 

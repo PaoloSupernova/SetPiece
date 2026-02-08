@@ -8,13 +8,20 @@
     <?php
     // Load Vite assets
     $isDev = ($_ENV['APP_ENV'] ?? 'development') === 'development';
+    $viteDevRunning = false;
     
-    if ($isDev && @file_get_contents('http://localhost:5173')) {
+    // Check if Vite dev server is running
+    if ($isDev) {
+        $context = stream_context_create(['http' => ['timeout' => 1]]);
+        $viteDevRunning = @file_get_contents('http://localhost:5173', false, $context) !== false;
+    }
+    
+    if ($viteDevRunning) {
         // Development mode - load from Vite dev server
         echo '<script type="module" src="http://localhost:5173/@vite/client"></script>';
         echo '<link rel="stylesheet" href="http://localhost:5173/resources/css/app.css">';
     } else {
-        // Production mode - load from manifest
+        // Production mode or Vite not running - load from manifest or fallback
         $manifestPath = __DIR__ . '/../../public/build/.vite/manifest.json';
         if (file_exists($manifestPath)) {
             $manifest = json_decode(file_get_contents($manifestPath), true);
@@ -22,8 +29,25 @@
                 echo '<link rel="stylesheet" href="/build/' . $manifest['resources/css/app.css']['file'] . '">';
             }
         } else {
-            // Fallback to basic styles if manifest not found
-            echo '<style>body { font-family: sans-serif; margin: 0; padding: 20px; }</style>';
+            // Fallback to basic Tailwind CSS via CDN for demo
+            echo '<script src="https://cdn.tailwindcss.com"></script>';
+            echo '<script>
+                tailwind.config = {
+                    theme: {
+                        extend: {
+                            colors: {
+                                "steward-primary": "#1e3a8a",
+                                "steward-accent": "#3b82f6",
+                                "steward-danger": "#dc2626",
+                                "steward-success": "#16a34a",
+                                "steward-warning": "#ea580c",
+                                "steward-dark": "#1f2937",
+                                "steward-muted": "#6b7280"
+                            }
+                        }
+                    }
+                }
+            </script>';
         }
     }
     ?>

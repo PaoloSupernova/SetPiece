@@ -39,9 +39,12 @@ class AuditService
         ?string $newState = null
     ): bool {
         try {
+            $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+            $now = $driver === 'sqlite' ? "datetime('now')" : "NOW()";
+            
             $sql = "INSERT INTO audit_logs 
                     (complaint_id, user_id, action, previous_state, new_state, timestamp) 
-                    VALUES (?, ?, ?, ?, ?, NOW())";
+                    VALUES (?, ?, ?, ?, ?, {$now})";
             
             $this->db->query($sql, [
                 $complaintId,

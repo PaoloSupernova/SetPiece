@@ -19,7 +19,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
-use PhpMimeMailParser\Parser;
+use ZBateson\MailMimeParser\MailMimeParser;
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use App\Core\Database;
 use App\Models\Complaint;
@@ -71,13 +71,13 @@ foreach ($emlFiles as $emlFile) {
     
     try {
         // Parse email
-        $parser = new Parser();
-        $parser->setPath($emlFile);
+        $mailParser = new MailMimeParser();
+        $message = $mailParser->parse(fopen($emlFile, 'r'));
         
-        $from = $parser->getHeader('from');
-        $subject = $parser->getHeader('subject') ?? 'No Subject';
-        $textBody = $parser->getMessageBody('text');
-        $htmlBody = $parser->getMessageBody('html');
+        $from = $message->getHeaderValue('from');
+        $subject = $message->getHeaderValue('subject') ?? 'No Subject';
+        $textBody = $message->getTextContent();
+        $htmlBody = $message->getHtmlContent();
         
         // Use text body, or strip HTML if only HTML body available
         $body = $textBody ?: strip_tags($htmlBody);
@@ -129,13 +129,14 @@ foreach ($emlFiles as $emlFile) {
         );
         
         // Process attachments for OCR
-        $attachments = $parser->getAttachments();
+        $attachmentCount = $message->getAttachmentCount();
         
-        if (!empty($attachments)) {
-            logMessage("Found " . count($attachments) . " attachment(s)");
+        if ($attachmentCount > 0) {
+            logMessage("Found {$attachmentCount} attachment(s)");
             
-            foreach ($attachments as $attachment) {
-                $attachmentFilename = $attachment->getFilename();
+            for ($i = 0; $i < $attachmentCount; $i++) {
+                $attachment = $message->getAttachmentPart($i);
+                $attachmentFilename = $attachment->getHeaderParameter('Content-Disposition', 'filename', 'attachment_' . $i);
                 $contentType = $attachment->getContentType();
                 
                 // Check if it's an image

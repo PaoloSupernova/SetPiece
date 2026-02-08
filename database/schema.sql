@@ -92,11 +92,10 @@ END$$
 DELIMITER ;
 
 -- Seed data: Default users with bcrypt hash for "steward2026"
--- Hash generated using: password_hash('steward2026', PASSWORD_BCRYPT)
--- For testing: $2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi
+-- Hash: $2y$10$zPyGSt5CycaArZLU4cOpy.e2XUjfINgDPNZoJFtD8/.BiDS0QgeBW
 
 INSERT INTO `users` (`name`, `email`, `password_hash`, `role`) VALUES
-('Admin User', 'admin@steward.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('SLO Officer', 'slo@steward.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'slo'),
-('DSO Officer', 'dso@steward.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'dso'),
-('Steward User', 'steward@steward.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'steward');
+('Admin User', 'admin@steward.local', '$2y$10$zPyGSt5CycaArZLU4cOpy.e2XUjfINgDPNZoJFtD8/.BiDS0QgeBW', 'admin'),
+('SLO Officer', 'slo@steward.local', '$2y$10$zPyGSt5CycaArZLU4cOpy.e2XUjfINgDPNZoJFtD8/.BiDS0QgeBW', 'slo'),
+('DSO Officer', 'dso@steward.local', '$2y$10$zPyGSt5CycaArZLU4cOpy.e2XUjfINgDPNZoJFtD8/.BiDS0QgeBW', 'dso'),
+('Steward User', 'steward@steward.local', '$2y$10$zPyGSt5CycaArZLU4cOpy.e2XUjfINgDPNZoJFtD8/.BiDS0QgeBW', 'steward');

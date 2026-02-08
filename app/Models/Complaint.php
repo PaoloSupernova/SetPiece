@@ -82,13 +82,23 @@ class Complaint
      */
     public function deadlockWatchlist(string $role, int $warningDays = 7): array
     {
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+        
+        if ($driver === 'sqlite') {
+            $dateCondition = "c.deadlock_deadline BETWEEN datetime('now') AND datetime('now', '+{$warningDays} days')";
+            $daysRemainingCalc = "CAST((julianday(c.deadlock_deadline) - julianday('now')) AS INTEGER)";
+        } else {
+            $dateCondition = "c.deadlock_deadline BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? DAY)";
+            $daysRemainingCalc = "DATEDIFF(c.deadlock_deadline, NOW())";
+        }
+        
         $sql = "SELECT 
                     c.*,
                     u.name as user_name,
-                    DATEDIFF(c.deadlock_deadline, NOW()) as days_remaining
+                    {$daysRemainingCalc} as days_remaining
                 FROM complaints c
                 LEFT JOIN users u ON c.user_id = u.id
-                WHERE c.deadlock_deadline BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? DAY)
+                WHERE {$dateCondition}
                 AND c.status NOT IN ('resolved', 'deadlock')";
         
         // CRITICAL: Apply safeguarding silo for SLO role
@@ -98,7 +108,9 @@ class Complaint
         
         $sql .= " ORDER BY c.deadlock_deadline ASC";
         
-        return $this->db->fetchAll($sql, [$warningDays]);
+        return $driver === 'sqlite' ? 
+            $this->db->fetchAll($sql) : 
+            $this->db->fetchAll($sql, [$warningDays]);
     }
 
     /**
@@ -109,13 +121,23 @@ class Complaint
      */
     public function breached(string $role): array
     {
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+        
+        if ($driver === 'sqlite') {
+            $dateCondition = "c.deadlock_deadline < datetime('now')";
+            $daysOverdueCalc = "CAST((julianday('now') - julianday(c.deadlock_deadline)) AS INTEGER)";
+        } else {
+            $dateCondition = "c.deadlock_deadline < NOW()";
+            $daysOverdueCalc = "DATEDIFF(NOW(), c.deadlock_deadline)";
+        }
+        
         $sql = "SELECT 
                     c.*,
                     u.name as user_name,
-                    DATEDIFF(NOW(), c.deadlock_deadline) as days_overdue
+                    {$daysOverdueCalc} as days_overdue
                 FROM complaints c
                 LEFT JOIN users u ON c.user_id = u.id
-                WHERE c.deadlock_deadline < NOW()
+                WHERE {$dateCondition}
                 AND c.status NOT IN ('resolved', 'deadlock')";
         
         // CRITICAL: Apply safeguarding silo for SLO role
@@ -176,11 +198,20 @@ class Complaint
     public function create(array $data): int
     {
         $deadlockDays = (int)($_ENV['DEADLOCK_DAYS'] ?? 42);
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+        
+        // Calculate deadline based on database driver
+        if ($driver === 'sqlite') {
+            $deadlineExpression = "datetime('now', '+{$deadlockDays} days')";
+        } else {
+            $deadlineExpression = "DATE_ADD(NOW(), INTERVAL {$deadlockDays} DAY)";
+        }
         
         $sql = "INSERT INTO complaints 
                 (user_id, subject, body, status, category, toxicity_score, 
                  deadlock_deadline, stadium_block, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY), ?, NOW())";
+                VALUES (?, ?, ?, ?, ?, ?, {$deadlineExpression}, ?, " . 
+                ($driver === 'sqlite' ? "datetime('now')" : "NOW()") . ")";
         
         $this->db->query($sql, [
             $data['user_id'],
@@ -189,7 +220,6 @@ class Complaint
             $data['status'] ?? 'new',
             $data['category'] ?? 'general',
             $data['toxicity_score'] ?? null,
-            $deadlockDays,
             $data['stadium_block'] ?? 'unknown',
         ]);
         
@@ -205,7 +235,10 @@ class Complaint
      */
     public function updateStatus(int $id, string $newStatus): bool
     {
-        $sql = "UPDATE complaints SET status = ?, updated_at = NOW() WHERE id = ?";
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+        $now = $driver === 'sqlite' ? "datetime('now')" : "NOW()";
+        
+        $sql = "UPDATE complaints SET status = ?, updated_at = {$now} WHERE id = ?";
         
         try {
             $this->db->query($sql, [$newStatus, $id]);
@@ -241,9 +274,12 @@ class Complaint
      */
     public function addMessage(int $complaintId, string $senderType, string $body): int
     {
+        $driver = $_ENV['DB_DRIVER'] ?? 'mysql';
+        $now = $driver === 'sqlite' ? "datetime('now')" : "NOW()";
+        
         $sql = "INSERT INTO complaint_messages 
                 (complaint_id, sender_type, body, created_at) 
-                VALUES (?, ?, ?, NOW())";
+                VALUES (?, ?, ?, {$now})";
         
         $this->db->query($sql, [$complaintId, $senderType, $body]);
         
